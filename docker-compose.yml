@@ -1,0 +1,187 @@
+version: '3.5'
+
+services:
+
+  zookeeper-1:
+    image: confluentinc/cp-zookeeper:$CP_VERSION
+    hostname: zookeeper-1
+    container_name: zookeeper-1
+    ports:
+      - 2181:2181
+    environment:
+      ZOOKEEPER_SERVER_ID: 1
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_SERVERS: zookeeper-1:2888:3888;zookeeper-2:2888:3888;zookeeper-3:2888:3888
+    networks:
+      - perf-test
+
+  zookeeper-2:
+    image: confluentinc/cp-zookeeper:$CP_VERSION
+    hostname: zookeeper-2
+    container_name: zookeeper-2
+    ports:
+      - 2182:2182
+    environment:
+      ZOOKEEPER_SERVER_ID: 2
+      ZOOKEEPER_CLIENT_PORT: 2182
+      ZOOKEEPER_SERVERS: zookeeper-1:2888:3888;zookeeper-2:2888:3888;zookeeper-3:2888:3888
+    networks:
+      - perf-test
+
+  zookeeper-3:
+    image: confluentinc/cp-zookeeper:$CP_VERSION
+    hostname: zookeeper-3
+    container_name: zookeeper-3
+    ports:
+      - 2183:2183
+    environment:
+      ZOOKEEPER_SERVER_ID: 3
+      ZOOKEEPER_CLIENT_PORT: 2183
+      ZOOKEEPER_SERVERS: zookeeper-1:2888:3888;zookeeper-2:2888:3888;zookeeper-3:2888:3888
+    networks:
+      - perf-test
+
+  broker-1:
+    image: confluentinc/cp-server:$CP_VERSION
+    hostname: broker-1
+    container_name: broker-1
+    ports:
+      - 9091:9091
+      - 8091:8091
+    environment:
+      KAFKA_BROKER_ID: 11
+      KAFKA_JMX_PORT: 8091
+      KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://broker-1:19091,LISTENER_DOCKER_EXTERNAL://${DOCKER_HOST_IP:-127.0.0.1}:9091
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
+      KAFKA_REPLICA_SELECTOR_CLASS: org.apache.kafka.common.replica.RackAwareReplicaSelector
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper-1:2181,zookeeper-2:2182,zookeeper-3:2183'
+      KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
+      KAFKA_CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker-1:19091,broker-2:19092,broker-3:19093
+      KAFKA_CONFLUENT_MONITORING_INTERCEPTER_BOOTSTRAP_SERVERS: broker-1:19091,broker-2:19092,broker-3:19093
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_CONFLUENT_BALANCER_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_OFFSETS_TOPIC_NUM_PARTITIONS: 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_LOG4J_ROOT_LOGLEVEL: INFO
+      KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,state.change.logger=INFO,kafka.log.LogCleaner=INFO,kafka=INFO"
+      KAFKA_CONFLUENT.REPORTERS.TELEMETRY.AUTO.ENABLE: 'false'
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_JMX_HOSTNAME: localhost
+      CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker-1:19091,broker-2:19092,broker-3:19093
+      CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
+      CONFLUENT_METRICS_ENABLE: 'true'
+      CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
+    depends_on:
+      - zookeeper-1
+      - zookeeper-2
+      - zookeeper-3
+    networks:
+      - perf-test
+
+  broker-2:
+    image: confluentinc/cp-server:$CP_VERSION
+    hostname: broker-2
+    container_name: broker-2
+    ports:
+      - 9092:9092
+      - 8092:8092
+    environment:
+      KAFKA_BROKER_ID: 12
+      KAFKA_JMX_PORT: 8092
+      KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://broker-2:19092,LISTENER_DOCKER_EXTERNAL://${DOCKER_HOST_IP:-127.0.0.1}:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
+      KAFKA_REPLICA_SELECTOR_CLASS: org.apache.kafka.common.replica.RackAwareReplicaSelector
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper-1:2181,zookeeper-2:2182,zookeeper-3:2183'
+      KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
+      KAFKA_CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker-1:19091,broker-2:19092,broker-3:19093
+      KAFKA_CONFLUENT_MONITORING_INTERCEPTER_BOOTSTRAP_SERVERS: broker-1:19091,broker-2:19092,broker-3:19093
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_CONFLUENT_BALANCER_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_OFFSETS_TOPIC_NUM_PARTITIONS: 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_LOG4J_ROOT_LOGLEVEL: INFO
+      KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,state.change.logger=INFO,kafka.log.LogCleaner=INFO,kafka=INFO"
+      KAFKA_CONFLUENT.REPORTERS.TELEMETRY.AUTO.ENABLE: 'false'
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_JMX_HOSTNAME: localhost
+      CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker-1:19091,broker-2:19092,broker-3:19093
+      CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
+      CONFLUENT_METRICS_ENABLE: 'true'
+      CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
+    depends_on:
+      - zookeeper-1
+      - zookeeper-2
+      - zookeeper-3
+    networks:
+      - perf-test
+
+  broker-3:
+    image: confluentinc/cp-server:$CP_VERSION
+    hostname: broker-3
+    container_name: broker-3
+    ports:
+      - 9093:9093
+      - 8093:8093
+    environment:
+      KAFKA_BROKER_ID: 13
+      KAFKA_JMX_PORT: 8093
+      KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://broker-3:19093,LISTENER_DOCKER_EXTERNAL://${DOCKER_HOST_IP:-127.0.0.1}:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
+      KAFKA_REPLICA_SELECTOR_CLASS: org.apache.kafka.common.replica.RackAwareReplicaSelector
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper-1:2181,zookeeper-2:2182,zookeeper-3:2183'
+      KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
+      KAFKA_CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker-1:19091,broker-2:19092,broker-3:19093
+      KAFKA_CONFLUENT_MONITORING_INTERCEPTER_BOOTSTRAP_SERVERS: broker-1:19091,broker-2:19092,broker-3:19093
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_CONFLUENT_BALANCER_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_OFFSETS_TOPIC_NUM_PARTITIONS: 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_LOG4J_ROOT_LOGLEVEL: INFO
+      KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,state.change.logger=INFO,kafka.log.LogCleaner=INFO,kafka=INFO"
+      KAFKA_CONFLUENT.REPORTERS.TELEMETRY.AUTO.ENABLE: 'false'
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_JMX_HOSTNAME: localhost
+      CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker-1:19091,broker-2:19092,broker-3:19093
+      CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
+      CONFLUENT_METRICS_ENABLE: 'true'
+      CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
+    depends_on:
+      - zookeeper-1
+      - zookeeper-2
+      - zookeeper-3
+    networks:
+      - perf-test
+
+  control-center:
+    image: confluentinc/cp-enterprise-control-center:$CP_VERSION
+    hostname: control-center
+    container_name: control-center
+    depends_on:
+      - broker-1
+      - broker-2
+      - broker-3
+    ports:
+      - 9021:9021
+    environment:
+      CONTROL_CENTER_BOOTSTRAP_SERVERS: broker-1:19091,broker-2:19092,broker-3:19093
+      CONTROL_CENTER_REPLICATION_FACTOR: 1
+      CONTROL_CENTER_INTERNAL_TOPICS_PARTITIONS: 1
+      CONTROL_CENTER_MONITORING_INTERCEPTOR_TOPIC_PARTITIONS: 1
+      CONTROL_CENTER_KAFKA_DEFAULT_BOOTSTRAP_SERVERS: broker-1:19091,broker-2:19092,broker-3:19093
+      CONFLUENT_METRICS_TOPIC_REPLICATION: 1
+      PORT: 9021
+    networks:
+      - perf-test
+
+networks:
+  perf-test:
+    name: perf-test

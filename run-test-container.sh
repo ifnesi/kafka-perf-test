@@ -4,7 +4,7 @@
 if [ $# -ge 2 ]; then
     if [ ! -f $1 ]; then
         echo
-        echo "Broker Configuration file not found: $1"
+        echo "Kafka Configuration file not found: $1"
         echo
         exit 1
     fi

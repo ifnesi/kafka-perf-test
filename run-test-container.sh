@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# System Vars
+MIN_CONSUMERS=1
+MAX_CONSUMERS=100
+
 # Validate input arguments
 if [ $# -ge 2 ]; then
     if [ ! -f $1 ]; then
@@ -19,8 +23,8 @@ if [ $# -ge 2 ]; then
     else
         if [[ "$3" =~ ^[0-9]+$ ]]; then
             CONSUMERS=$3
-            CONSUMERS=$((CONSUMERS>=100 ? $3 : CONSUMERS))
-            CONSUMERS=$((CONSUMERS<1 ? 1 : CONSUMERS))
+            CONSUMERS=$((CONSUMERS>MAX_CONSUMERS ? MAX_CONSUMERS : CONSUMERS))
+            CONSUMERS=$((CONSUMERS<MIN_CONSUMERS ? MIN_CONSUMERS : CONSUMERS))
         else
             echo
             echo "Number of consumers must be an integer between 1 and 100"

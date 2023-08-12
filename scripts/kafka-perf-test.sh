@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# System Vars
 BOOTSTRAT_SERVERS=`cat /tmp/kafka.ini | grep bootstrap.servers | awk '{split($0,array,"="); print array[2]}' | tr -d ' '`
 PRODUCER_PROPS=`echo "\n[" | cat /tmp/client.ini - | sed -n '/^\[producer-props\]/,/^\[/p' | sed '$d' | sed '1d' | tr -d ' ' | sed '/^#/d' | tr '\n' ' '`
 TOPIC_PARAMS=`echo "\n[" | cat /tmp/client.ini - | sed -n '/^\[topic\]/,/^\[/p' | sed '$d' | sed '1d' | sed '/^#/d' | tr '\n' ' '`

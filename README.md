@@ -67,10 +67,10 @@ If using the local Kafka cluster, then for example run `./run-test-container.sh 
 Once the script is completed, it will display the statistics about the specific set of producer/consumer(s) and delete the corresponding topic `perf-test-{EPOCH}-{RANDOM}`:
 ```
 Test Results:
-Producer: 24.79 MB/sec, 16.88 ms avg latency, 1851.00 ms max latency, 7 ms 50th, 57ms 95th, 211 ms 99th, 566 ms 99.9th.
-Consumer 1: 24.7757 MB/sec
-Consumer 2: 24.7930 MB/sec
-Consumer 3: 24.8054 MB/sec
+54000000 records sent, 59998.200054 records/sec (29.30 MB/sec), 5.91 ms avg latency, 304.00 ms max latency, 4 ms 50th, 17 ms 95th, 43 ms 99th, 117 ms 99.9th.
+Consumer 1: 29.314 MB/sec
+Consumer 2: 29.3108 MB/sec
+Consumer 3: 29.3074 MB/sec
 ```
 
 ## :x: Stop local Kafka Cluster (Docker)

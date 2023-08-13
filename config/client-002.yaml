@@ -5,7 +5,7 @@ topic:
 producer-props:
   - acks: all
   - linger.ms: 10
-  - compression.type: none
+  - compression.type: lz4
 
 kafka-producer-perf-test:
   - record-size: 1024

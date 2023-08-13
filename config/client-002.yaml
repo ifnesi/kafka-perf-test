@@ -3,9 +3,10 @@ topic:
   - replication-factor: 3
 
 producer-props:
-  - acks: all
+  - acks: 1
   - linger.ms: 10
   - compression.type: lz4
+  - batch.size: 100000
 
 kafka-producer-perf-test:
   - record-size: 1024

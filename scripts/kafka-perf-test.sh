@@ -8,6 +8,23 @@ function parse_config {
   echo $result
 }
 
+function delete_topic {
+  echo
+  echo "Deleting topic: perf-test-$1"
+  kafka-topics \
+    --bootstrap-server "$2" \
+    --command-config /tmp/kafka.config \
+    --delete \
+    --if-exists \
+    --topic perf-test-$1 > /dev/null 2>&1
+  if [ $3 ]; then
+    echo
+    echo "ERROR: Script aborted!"
+    echo
+    exit 1
+  fi
+}
+
 # System Vars
 BOOTSTRAT_SERVERS=`cat /tmp/kafka.config | grep bootstrap.servers | awk '{split($0,array,"="); print array[2]}' | tr -d ' '`
 TOPIC_PARAMS=`parse_config "/tmp/client.yaml" "topic" " "`
@@ -20,27 +37,30 @@ echo "Confluent Platform's Performance Test [version "`kafka-topics --version`"]
 echo
 echo "Tester ID: $1 ($BOOTSTRAT_SERVERS)"
 
+# Create topic
 echo
 kafka-topics \
   --bootstrap-server "$BOOTSTRAT_SERVERS" \
   --command-config /tmp/kafka.config \
   --create \
   --topic perf-test-$1 \
-  $TOPIC_PARAMS
+  $TOPIC_PARAMS || delete_topic $1 "$BOOTSTRAT_SERVERS" 1
 
+# Start producer
 echo
-echo "Starting Producer"
-kafka-producer-perf-test \
+echo "Starting Producer..."
+(kafka-producer-perf-test \
   --topic perf-test-$1 \
   --producer.config /tmp/kafka.config \
   --producer-props $PRODUCER_PROPS \
   $PRODUCER_PARAMS \
-  | tee /tmp/producer.dat &
+  | tee /tmp/producer.dat || delete_topic $1 "$BOOTSTRAT_SERVERS" 1) &
 
+# Start consumer(s)
 for i in $(seq 1 $2); do
   echo
-  echo "Starting Consumer_$i (Consumer Group: perf-test-$1-$i)"
-  kafka-consumer-perf-test \
+  echo "Starting Consumer_$i (Consumer Group: perf-test-$1-$i)..."
+  (kafka-consumer-perf-test \
     --bootstrap-server "$BOOTSTRAT_SERVERS" \
     --consumer.config /tmp/kafka.config \
     --topic perf-test-$1 \
@@ -48,21 +68,14 @@ for i in $(seq 1 $2); do
     --show-detailed-stats \
     --hide-header \
     $CONSUMER_PARAMS \
-    | tee "/tmp/consumer_$i.dat" &
+    | tee "/tmp/consumer_$i.dat" || delete_topic $1 "$BOOTSTRAT_SERVERS" 1) &
 done
-echo
 
+# Wait producers and consumer(s) to finish
+echo
 wait
 
-echo
-echo "Deleting topic: perf-test-$1"
-kafka-topics \
-  --bootstrap-server "$BOOTSTRAT_SERVERS" \
-  --command-config /tmp/kafka.config \
-  --delete \
-  --if-exists \
-  --topic perf-test-$1
-
+# Display test results
 echo
 echo "Test Results:"
 tail -n 1 /tmp/producer.dat | sed 's|.(\(.\))|Producer: \1|g'
@@ -74,4 +87,5 @@ for i in $(seq 1 $2); do
 done
 echo
 
-exit
+# Delete topic
+delete_topic $1 "$BOOTSTRAT_SERVERS" 0

@@ -1,0 +1,17 @@
+topic:
+  - partitions: 108
+  - replication-factor: 3
+
+producer-props:
+  - acks: all
+  - linger.ms: 10
+  - compression.type: none
+
+kafka-producer-perf-test:
+  - record-size: 512
+  - throughput: 60000
+  - num-records: 54000000
+
+kafka-consumer-perf-test:
+  - messages: 53950000
+  - timeout: 30000

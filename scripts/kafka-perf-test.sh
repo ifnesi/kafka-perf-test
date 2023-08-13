@@ -1,20 +1,29 @@
 #!/bin/bash
 
-# System Vars
-BOOTSTRAT_SERVERS=`cat /tmp/kafka.ini | grep bootstrap.servers | awk '{split($0,array,"="); print array[2]}' | tr -d ' '`
-PRODUCER_PROPS=`echo "\n[" | cat /tmp/client.ini - | sed -n '/^\[producer-props\]/,/^\[/p' | sed '$d' | sed '1d' | tr -d ' ' | sed '/^#/d' | tr '\n' ' '`
-TOPIC_PARAMS=`echo "\n[" | cat /tmp/client.ini - | sed -n '/^\[topic\]/,/^\[/p' | sed '$d' | sed '1d' | sed '/^#/d' | tr '\n' ' '`
-PRODUCER_PARAMS=`echo "\n[" | cat /tmp/client.ini - | sed -n '/^\[kafka-producer-perf-test\]/,/^\[/p' | sed '$d' | sed '1d' | sed '/^#/d' | tr '\n' ' '`
-CONSUMER_PARAMS=`echo "\n[" | cat /tmp/client.ini - | sed -n '/^\[kafka-consumer-perf-test\]/,/^\[/p' | sed '$d' | sed '1d' | sed '/^#/d' | tr '\n' ' '`
+function parse_config {
+  result=`echo "\n" | cat $1 - | sed -n "/^$2\:/,/^[a-zA-Z0-9]/p" | sed '$d' | sed '1d' | tr -d ' ' | sed '/^#/d' | sed '/^$/d' | sed -e 's/^/-/' | tr '\n' ' ' | tr ':' "$3"`
+  if [[ $3 == '=' ]]; then
+    result=`echo $result | tr -d '\-'`
+  fi
+  echo $result
+}
 
-echo "-----"
+# System Vars
+BOOTSTRAT_SERVERS=`cat /tmp/kafka.config | grep bootstrap.servers | awk '{split($0,array,"="); print array[2]}' | tr -d ' '`
+TOPIC_PARAMS=`parse_config "/tmp/client.yaml" "topic" " "`
+PRODUCER_PROPS=`parse_config "/tmp/client.yaml" "producer-props" "="`
+PRODUCER_PARAMS=`parse_config "/tmp/client.yaml" "kafka-producer-perf-test" " "`
+CONSUMER_PARAMS=`parse_config "/tmp/client.yaml" "kafka-consumer-perf-test" " "`
+
+echo "Confluent Platform's Performance Test [version "`kafka-topics --version`"]"
+
+echo
 echo "Tester ID: $1 ($BOOTSTRAT_SERVERS)"
 
 echo
-echo "Creating topic: perf-test-$1"
 kafka-topics \
   --bootstrap-server "$BOOTSTRAT_SERVERS" \
-  --command-config /tmp/kafka.ini \
+  --command-config /tmp/kafka.config \
   --create \
   --topic perf-test-$1 \
   $TOPIC_PARAMS
@@ -23,17 +32,17 @@ echo
 echo "Starting Producer"
 kafka-producer-perf-test \
   --topic perf-test-$1 \
-  --producer.config /tmp/kafka.ini \
+  --producer.config /tmp/kafka.config \
   --producer-props $PRODUCER_PROPS \
   $PRODUCER_PARAMS \
   | tee /tmp/producer.dat &
 
 for i in $(seq 1 $2); do
   echo
-  echo "Starting Consumer_$i"
+  echo "Starting Consumer_$i (Consumer Group: perf-test-$1-$i)"
   kafka-consumer-perf-test \
     --bootstrap-server "$BOOTSTRAT_SERVERS" \
-    --consumer.config /tmp/kafka.ini \
+    --consumer.config /tmp/kafka.config \
     --topic perf-test-$1 \
     --group "perf-test-$1-$i" \
     --show-detailed-stats \
@@ -49,7 +58,7 @@ echo
 echo "Deleting topic: perf-test-$1"
 kafka-topics \
   --bootstrap-server "$BOOTSTRAT_SERVERS" \
-  --command-config /tmp/kafka.ini \
+  --command-config /tmp/kafka.config \
   --delete \
   --if-exists \
   --topic perf-test-$1
@@ -60,8 +69,8 @@ tail -n 1 /tmp/producer.dat | sed 's|.(\(.\))|Producer: \1|g'
 for i in $(seq 1 $2); do
   echo "Consumer $i:" \
     `cat "/tmp/consumer_$i.dat" \
-    | awk '{ sum += ($5+$10) } END { if (NR > 0) print sum / (2*NR); }'`\
-    "MB/sec (Average)"
+    | awk -F"," '{if($8>0){msec+=$8};mb=$3}END{print 1000*mb/msec}'`\
+    "MB/sec"
 done
 echo
 

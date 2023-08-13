@@ -57,4 +57,4 @@ docker cp $1 "test_container_$TESTER_ID:/tmp/kafka.config" > /dev/null
 docker cp $2 "test_container_$TESTER_ID:/tmp/client.yaml" > /dev/null
 docker cp ./scripts/kafka-perf-test.sh "test_container_$TESTER_ID:/tmp/kafka-perf-test.sh" > /dev/null
 docker exec "test_container_$TESTER_ID" bash -c "/tmp/kafka-perf-test.sh $TESTER_ID $CONSUMERS"
-docker rm -f "test_container_$TESTER_ID" > /dev/null
+docker rm -f "test_container_$TESTER_ID" > /dev/null 2>&1

@@ -10,13 +10,13 @@ Benchmark testing and results for Apache Kafka’s performance, based on:
 ## :white_check_mark: Start local Kafka Cluster (Docker)
 Run the script `./start-local-kafka.sh` to start docker compose:
  - 3x Zookeeper
- - 3x Confluent Servers
+ - 4x Confluent Servers
  - 1x Confluent Control Center
 
 ## :memo: Run producer/consumer(s) instances (Docker)
 Create a configuration file to access the Kafka cluster (`kafka_config_file`). Please refere to the file `./config/kafka-local.config` for the local Kafka cluster (Docker):
 ```
-bootstrap.servers = broker-1:19091,broker-2:19092,broker-3:19093
+bootstrap.servers = broker-1:19091,broker-2:19092,broker-3:19093,broker-4:19094
 ```
 
 Other configuration file example is `./config/kafka-confluent-cloud.config` (update or create new ones as required).
@@ -38,7 +38,7 @@ Producer and consumer(s) based on `kafka-producer-perf-test` and `kafka-consumer
 Where:
  - `kafka_config_file`: File containing the configuration to access the Kafka cluster
  ```
-bootstrap.servers = broker-1:19091,broker-2:19092,broker-3:19093
+bootstrap.servers = broker-1:19091,broker-2:19092,broker-3:19093,broker-4:19094
  ```
  - `client_yaml_file`: File containing the configuration for the producer and consumer(s)
  ```
@@ -64,8 +64,42 @@ kafka-consumer-perf-test:
 
 If using the local Kafka cluster, then for example run `./run-test-container.sh ./config/kafka-local.config ./config/client-001.yaml 3`. It will connect to the local Kafka cluster and have the 1x producer and 3x consumers configured as per the client YAML file set.
 
-Once the script is completed, it will display the statistics about the specific set of producer/consumer(s) and delete the corresponding topic `perf-test-{EPOCH}-{RANDOM}`:
+Once the script is completed, it will display the statistics about the specific set of producer/consumer(s) and delete the corresponding topic `perf-test-{EPOCH}-{RANDOM}`. See output example below:
 ```
+Confluent Platform's Performance Test [version 7.4.1-ccs (Commit:fed9c006bfc7ba5bf7d2dee840e041d1a851d903)]
+
+Tester ID: 1691999439-18495 (broker-1:19091,broker-2:19092,broker-3:19093,broker-4:19094)
+
+Created topic perf-test-1691999439-18495.
+
+Starting Producer...
+ > --record-size 1024 --throughput 60000 --num-records 54000000
+ > acks=1 linger.ms=10 compression.type=lz4 batch.size=100000
+
+Starting Consumer_1 (Consumer Group: perf-test-1691999439-18495-1)...
+ > --messages 53950000 --timeout 30000
+
+Starting Consumer_2 (Consumer Group: perf-test-1691999439-18495-2)...
+ > --messages 53950000 --timeout 30000
+
+Starting Consumer_3 (Consumer Group: perf-test-1691999439-18495-3)...
+ > --messages 53950000 --timeout 30000
+
+238712 records sent, 47742.4 records/sec (46.62 MB/sec), 6.9 ms avg latency, 272.0 ms max latency.
+2023-08-14 07:50:48:963, 0, 334.7598, 66.9252, 342794, 68531.3874, 430, 4572, 73.2195, 74976.8154
+2023-08-14 07:50:49:385, 0, 370.8340, 74.1668, 379734, 75946.8000, 643, 4357, 85.1122, 87154.9231
+2023-08-14 07:50:49:679, 0, 395.0498, 78.8365, 404531, 80728.5971, 727, 4284, 92.2152, 94428.3380
+361059 records sent, 72197.4 records/sec (70.51 MB/sec), 3.9 ms avg latency, 56.0 ms max latency.
+2023-08-14 07:50:53:963, 0, 662.2100, 65.4900, 678103, 67061.8000, 0, 5000, 65.4900, 67061.8000
+2023-08-14 07:50:54:385, 0, 687.1914, 63.2715, 703684, 64790.0000, 0, 5000, 63.2715, 64790.0000
+2023-08-14 07:50:54:679, 0, 703.4561, 61.6813, 720339, 63161.6000, 0, 5000, 61.6813, 63161.6000
+300107 records sent, 60021.4 records/sec (58.61 MB/sec), 4.0 ms avg latency, 79.0 ms max latency.
+2023-08-14 07:50:58:964, 0, 955.5186, 58.6500, 978451, 60057.5885, 0, 5001, 58.6500, 60057.5885
+2023-08-14 07:50:59:386, 0, 980.2451, 58.5990, 1003771, 60005.3989, 0, 5001, 58.5990, 60005.3989
+2023-08-14 07:50:59:679, 0, 997.4551, 58.7998, 1021394, 60211.0000, 0, 5000, 58.7998, 60211.0000
+
+...
+
 Test Results:
 54000000 records sent, 59998.200054 records/sec (29.30 MB/sec), 5.91 ms avg latency, 304.00 ms max latency, 4 ms 50th, 17 ms 95th, 43 ms 99th, 117 ms 99.9th.
 Consumer 1: 29.314 MB/sec

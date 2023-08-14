@@ -17,7 +17,7 @@ function delete_topic {
     --delete \
     --if-exists \
     --topic perf-test-$1 > /dev/null 2>&1
-  if [ $3 ]; then
+  if [ $3 -eq 1 ]; then
     echo
     echo "ERROR: Script aborted!"
     echo
@@ -49,17 +49,21 @@ kafka-topics \
 # Start producer
 echo
 echo "Starting Producer..."
+echo " > $PRODUCER_PARAMS"
+echo " > $PRODUCER_PROPS"
 (kafka-producer-perf-test \
   --topic perf-test-$1 \
   --producer.config /tmp/kafka.config \
   --producer-props $PRODUCER_PROPS \
   $PRODUCER_PARAMS \
   | tee /tmp/producer.dat || delete_topic $1 "$BOOTSTRAT_SERVERS" 1) &
+sleep 0.5
 
 # Start consumer(s)
 for i in $(seq 1 $2); do
   echo
   echo "Starting Consumer_$i (Consumer Group: perf-test-$1-$i)..."
+  echo " > $CONSUMER_PARAMS"
   (kafka-consumer-perf-test \
     --bootstrap-server "$BOOTSTRAT_SERVERS" \
     --consumer.config /tmp/kafka.config \
@@ -69,6 +73,7 @@ for i in $(seq 1 $2); do
     --hide-header \
     $CONSUMER_PARAMS \
     | tee "/tmp/consumer_$i.dat" || delete_topic $1 "$BOOTSTRAT_SERVERS" 1) &
+  sleep 0.25
 done
 
 # Wait producers and consumer(s) to finish

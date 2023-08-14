@@ -13,6 +13,26 @@ Run the script `./start-local-kafka.sh` to start docker compose:
  - 4x Confluent Servers
  - 1x Confluent Control Center
 
+ ```
+Check if docker is running...
+
+Starting up docker compose (Confluent Platform version 7.4.1)...
+[+] Running 9/9
+ ✔ Network perf-test         Created
+ ✔ Container zookeeper-2     Started
+ ✔ Container zookeeper-3     Started
+ ✔ Container zookeeper-1     Started
+ ✔ Container broker-4        Started
+ ✔ Container broker-2        Started
+ ✔ Container broker-3        Started
+ ✔ Container broker-1        Started
+ ✔ Container control-center  Started
+
+Waiting for Kafka cluster to be ready...........
+
+Ready! Go to http://localhost:9021 to access Confluent Control Center (Local Kafka cluster)
+ ```
+
 ## :memo: Run producer/consumer(s) instances (Docker)
 Create a configuration file to access the Kafka cluster (`kafka_config_file`). Please refere to the file `./config/kafka-local.config` for the local Kafka cluster (Docker):
 ```
@@ -105,10 +125,27 @@ Test Results:
 Consumer 1: 29.314 MB/sec
 Consumer 2: 29.3108 MB/sec
 Consumer 3: 29.3074 MB/sec
+
+Deleting topic: perf-test-1691999439-18495
 ```
 
 ## :x: Stop local Kafka Cluster (Docker)
 Run the script `./stop-local-kafka.sh` to stop docker compose.
+```
+Check if docker is running...
+
+Stopping up docker compose (Confluent Platform version 7.4.1)...
+[+] Running 9/9
+ ✔ Container control-center  Removed
+ ✔ Container broker-1        Removed
+ ✔ Container broker-2        Removed
+ ✔ Container broker-3        Removed
+ ✔ Container broker-4        Removed
+ ✔ Container zookeeper-3     Removed
+ ✔ Container zookeeper-1     Removed
+ ✔ Container zookeeper-2     Removed
+ ✔ Network perf-test         Removed
+```
 
 # External References
 Check out [Confluent's Developer portal](https://developer.confluent.io), it has free courses, documents, articles, blogs, podcasts and so many more content to get you up and running with a fully managed Apache Kafka service.

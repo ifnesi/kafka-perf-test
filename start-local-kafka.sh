@@ -34,5 +34,6 @@ while [ "$(curl -s -w '%{http_code}' -o /dev/null 'http://localhost:9021/cluster
 done
 
 echo
-echo "Ready! Go to http://localhost:9021 to access Confluent Control Center"
+echo
+echo "Ready! Go to http://localhost:9021 to access Confluent Control Center (Local Kafka cluster)"
 echo

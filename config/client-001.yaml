@@ -15,3 +15,4 @@ kafka-producer-perf-test:
 kafka-consumer-perf-test:
   - messages: 53950000
   - timeout: 30000
+  
